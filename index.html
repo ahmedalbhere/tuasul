@@ -3,22 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎤 ناطق – استماع مستمر</title>
+<title>مترجم صوت → لغة إشارة</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-
 body{
+    margin:0;
     font-family:Arial, sans-serif;
     background:linear-gradient(135deg,#1a237e,#000);
     min-height:100vh;
     display:flex;
-    align-items:center;
     justify-content:center;
+    align-items:center;
     padding:15px;
 }
 
-.container{
+.app{
     background:#fff;
     width:100%;
     max-width:900px;
@@ -30,200 +29,179 @@ body{
 h1{
     text-align:center;
     color:#1a237e;
-    font-size:2.8em;
+    font-size:2.5em;
     margin-bottom:15px;
 }
 
-.text-screen{
-    background:#fff;
+.box{
     border:3px solid #1a237e;
     border-radius:15px;
-    padding:20px;
-    min-height:260px;
-    font-size:2em;
+    padding:15px;
+    margin-bottom:15px;
+}
+
+.text{
+    min-height:120px;
+    font-size:1.8em;
     font-weight:bold;
-    overflow-y:auto;
-    animation:glow 2s infinite alternate;
 }
 
-@keyframes glow{
-    from{box-shadow:inset 0 0 10px #1a237e}
-    to{box-shadow:inset 0 0 20px gold}
-}
-
-.controls{
-    margin-top:15px;
+.sign{
+    background:#1a237e;
+    color:#fff;
+    border-radius:15px;
+    min-height:200px;
     display:flex;
-    gap:10px;
-    flex-wrap:wrap;
+    flex-direction:column;
+    align-items:center;
     justify-content:center;
 }
 
-button,select{
-    font-size:1.4em;
-    padding:10px 22px;
-    border-radius:40px;
+.emoji{
+    font-size:5em;
+    animation:float 2s infinite;
+}
+
+@keyframes float{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-10px)}
+}
+
+.sign-word{
+    margin-top:10px;
+    font-size:1.8em;
+    background:rgba(255,255,255,.2);
+    padding:8px 20px;
+    border-radius:30px;
+}
+
+.controls{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    flex-wrap:wrap;
+}
+
+button{
+    padding:10px 25px;
+    font-size:1.3em;
     border:none;
+    border-radius:40px;
     cursor:pointer;
     font-weight:bold;
 }
 
-select{
-    border:2px solid #1a237e;
-}
-
 .start{background:#4CAF50;color:#fff}
 .stop{background:#f44336;color:#fff}
-.copy{background:#2196F3;color:#fff}
-.clear{background:#ff9800;color:#fff}
 
 .status{
-    margin-top:15px;
-    background:#e3f2fd;
-    padding:10px;
-    border-radius:40px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    gap:10px;
-    font-size:1.3em;
-}
-
-.led{
-    width:14px;
-    height:14px;
-    border-radius:50%;
-    background:#f44336;
-}
-
-@media(max-width:600px){
-    h1{font-size:2.2em}
-    .text-screen{font-size:1.6em}
+    margin-top:10px;
+    text-align:center;
+    font-size:1.2em;
 }
 </style>
 </head>
 
 <body>
-<div class="container">
-    <h1>🎤 ناطق</h1>
+<div class="app">
+    <h1>🤟 مترجم صوت → لغة إشارة</h1>
 
-    <div class="text-screen" id="voiceText">
-        🔊 في انتظار التشغيل...
+    <div class="box">
+        <div class="text" id="text">🎤 في انتظار الصوت...</div>
+    </div>
+
+    <div class="box sign">
+        <div class="emoji" id="emoji">🤟</div>
+        <div class="sign-word" id="signWord">في انتظار الكلام</div>
     </div>
 
     <div class="controls">
-        <select id="lang">
-            <option value="ar-SA">🇸🇦 عربي</option>
-            <option value="en-US">🇺🇸 English</option>
-        </select>
-
-        <button class="start" id="start">▶ تشغيل الميكروفون</button>
+        <button class="start" id="start">▶ تشغيل</button>
         <button class="stop" id="stop">⏹ إيقاف</button>
-        <button class="copy" id="copy">📋 نسخ</button>
-        <button class="clear" id="clear">🧹 مسح</button>
     </div>
 
-    <div class="status">
-        <div class="led" id="led"></div>
-        <span id="statusText">الميكروفون متوقف</span>
-    </div>
+    <div class="status" id="status">الميكروفون متوقف</div>
 </div>
 
 <script>
-const voiceText = document.getElementById("voiceText");
-const lang = document.getElementById("lang");
-const startBtn = document.getElementById("start");
-const stopBtn = document.getElementById("stop");
-const copyBtn = document.getElementById("copy");
-const clearBtn = document.getElementById("clear");
-const led = document.getElementById("led");
-const statusText = document.getElementById("statusText");
+const textBox = document.getElementById("text");
+const emoji = document.getElementById("emoji");
+const signWord = document.getElementById("signWord");
+const status = document.getElementById("status");
 
 let recognition;
-let finalText = "";
-let userStopped = false;
+let stopped = true;
 
-function createRecognition(){
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(!SR){
-        alert("المتصفح لا يدعم التعرف على الصوت");
-        return null;
+// قاموس إشارات بسيطة
+const signs = {
+    "مرحبا": {emoji:"👋", word:"مرحبا"},
+    "سلام": {emoji:"✋", word:"سلام"},
+    "نعم": {emoji:"👍", word:"نعم"},
+    "لا": {emoji:"👎", word:"لا"},
+    "شكرا": {emoji:"🙏", word:"شكرا"},
+    "أنا": {emoji:"👆", word:"أنا"},
+    "أنت": {emoji:"👇", word:"أنت"},
+    "نحن": {emoji:"🤝", word:"نحن"},
+    "حب": {emoji:"❤️", word:"حب"},
+    "تمام": {emoji:"👌", word:"تمام"},
+    "توقف": {emoji:"✋", word:"توقف"},
+};
+
+function translateToSign(text){
+    for(let key in signs){
+        if(text.includes(key)){
+            emoji.textContent = signs[key].emoji;
+            signWord.textContent = signs[key].word;
+            return;
+        }
     }
-
-    const rec = new SR();
-    rec.lang = lang.value;
-    rec.continuous = true;
-    rec.interimResults = true;
-
-    rec.onstart = () => {
-        led.style.background = "#4CAF50";
-        statusText.textContent = "🎤 يستمع الآن...";
-    };
-
-    rec.onresult = (e) => {
-        let interim = "";
-        for(let i = e.resultIndex; i < e.results.length; i++){
-            const t = e.results[i][0].transcript;
-            if(e.results[i].isFinal){
-                finalText += t + " ";
-            }else{
-                interim += t;
-            }
-        }
-        voiceText.textContent = finalText + interim;
-    };
-
-    rec.onerror = (e) => {
-        console.log("خطأ:", e.error);
-    };
-
-    rec.onend = () => {
-        if(!userStopped){
-            setTimeout(() => {
-                recognition = createRecognition();
-                recognition && recognition.start();
-            }, 400);
-        }else{
-            led.style.background = "#f44336";
-            statusText.textContent = "الميكروفون متوقف";
-        }
-    };
-
-    return rec;
+    emoji.textContent = "🤟";
+    signWord.textContent = "جاري الترجمة...";
 }
 
-startBtn.onclick = () => {
-    userStopped = false;
-    finalText = "";
-    voiceText.textContent = "🔊 أستمع...";
-    recognition = createRecognition();
-    recognition && recognition.start();
-};
-
-stopBtn.onclick = () => {
-    userStopped = true;
-    recognition && recognition.stop();
-};
-
-lang.onchange = () => {
-    if(recognition){
-        userStopped = true;
-        recognition.stop();
-        setTimeout(() => {
-            userStopped = false;
-            recognition = createRecognition();
-            recognition && recognition.start();
-        }, 500);
+function startMic(){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){
+        alert("المتصفح لا يدعم الميكروفون");
+        return;
     }
+
+    recognition = new SR();
+    recognition.lang = "ar-SA";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onstart = ()=>{
+        status.textContent = "🎤 يستمع الآن...";
+    };
+
+    recognition.onresult = e=>{
+        let txt = "";
+        for(let i=e.resultIndex;i<e.results.length;i++){
+            txt += e.results[i][0].transcript;
+        }
+        textBox.textContent = txt;
+        translateToSign(txt);
+    };
+
+    recognition.onend = ()=>{
+        if(!stopped){
+            recognition.start();
+        }
+    };
+
+    recognition.start();
+}
+
+document.getElementById("start").onclick = ()=>{
+    stopped = false;
+    startMic();
 };
 
-copyBtn.onclick = () => {
-    navigator.clipboard.writeText(voiceText.textContent);
-};
-
-clearBtn.onclick = () => {
-    finalText = "";
-    voiceText.textContent = "🧹 تم المسح";
+document.getElementById("stop").onclick = ()=>{
+    stopped = true;
+    recognition && recognition.stop();
+    status.textContent = "الميكروفون متوقف";
 };
 </script>
 </body>
