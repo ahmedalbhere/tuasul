@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>ناطق - للتواصل بالصوت والنص</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 800px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .text-display {
+            background: #f5f5f5;
+            border-radius: 15px;
+            padding: 30px;
+            min-height: 200px;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            line-height: 1.6;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .start-btn {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .start-btn:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        
+        .stop-btn {
+            background: #f44336;
+            color: white;
+        }
+        
+        .stop-btn:hover {
+            background: #da190b;
+            transform: scale(1.05);
+        }
+        
+        .clear-btn {
+            background: #ff9800;
+            color: white;
+        }
+        
+        .clear-btn:hover {
+            background: #e68a00;
+            transform: scale(1.05);
+        }
+        
+        .copy-btn {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .copy-btn:hover {
+            background: #0b7dda;
+            transform: scale(1.05);
+        }
+        
+        .language-select {
+            padding: 15px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            border: 2px solid #e0e0e0;
+            width: 200px;
+            text-align: center;
+        }
+        
+        .status {
+            text-align: center;
+            color: #666;
+            margin-top: 20px;
+            font-style: italic;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+        }
+        
+        .suggestion-box {
+            background: #e8f4fd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .suggestion-box h3 {
+            color: #1976D2;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗣️ ناطق</h1>
+        <div class="subtitle">حول كلامك إلى نص مكتوب بسهولة</div>
+        
+        <div class="text-display" id="textDisplay">
+            سيتحول الكلام إلى نص هنا...
+        </div>
+        
+        <div class="controls">
+            <select class="language-select" id="languageSelect">
+                <option value="ar-SA">العربية</option>
+                <option value="en-US">الإنجليزية</option>
+                <option value="fr-FR">الفرنسية</option>
+                <option value="es-ES">الإسبانية</option>
+            </select>
+            
+            <button class="start-btn" id="startBtn">▶️ ابدأ التسجيل</button>
+            <button class="stop-btn" id="stopBtn">⏹️ أوقف التسجيل</button>
+            <button class="clear-btn" id="clearBtn">🧹 مسح النص</button>
+            <button class="copy-btn" id="copyBtn">📋 نسخ النص</button>
+        </div>
+        
+        <div class="status" id="status">
+            اضغط على "ابدأ التسجيل" للبدء
+        </div>
+        
+        <div class="suggestion-box">
+            <h3>💡 نصائح للاستخدام:</h3>
+            <ul>
+                <li>تأكد من توصيل الميكروفون</li>
+                <li>تحدث بوضوح وبسرعة معتدلة</li>
+                <li>يمكنك نسخ النص ومشاركته مع الآخرين</li>
+                <li>اختر اللغة المناسبة قبل البدء</li>
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <p>🌟 موقع مجاني لمساعدة الصم والبكم على التواصل</p>
+        </div>
+    </div>
+
+    <script>
+        // التحقق من دعم المتصفح
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            alert('عذراً، متصفحك لا يدعم خاصية التعرف على الكلام. الرجاء استخدام متصفح حديث مثل Chrome أو Edge.');
+        }
+
+        // إعداد التعرف على الكلام
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        // عناصر الصفحة
+        const textDisplay = document.getElementById('textDisplay');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const languageSelect = document.getElementById('languageSelect');
+        const status = document.getElementById('status');
+        
+        // إعدادات التعرف
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'ar-SA';
+        
+        // متغير لتخزين النص الكامل
+        let finalTranscript = '';
+        
+        // عند بدء التسجيل
+        startBtn.addEventListener('click', () => {
+            recognition.lang = languageSelect.value;
+            recognition.start();
+            status.textContent = '🟢 جاري الاستماع... تحدث الآن';
+            status.style.color = '#4CAF50';
+        });
+        
+        // عند إيقاف التسجيل
+        stopBtn.addEventListener('click', () => {
+            recognition.stop();
+            status.textContent = '⏹️ تم إيقاف التسجيل';
+            status.style.color = '#f44336';
+        });
+        
+        // مسح النص
+        clearBtn.addEventListener('click', () => {
+            textDisplay.textContent = 'سيتحول الكلام إلى نص هنا...';
+            finalTranscript = '';
+        });
+        
+        // نسخ النص
+        copyBtn.addEventListener('click', () => {
+            const text = textDisplay.textContent;
+            if (text && text !== 'سيتحول الكلام إلى نص هنا...') {
+                navigator.clipboard.writeText(text).then(() => {
+                    status.textContent = '📋 تم نسخ النص!';
+                    status.style.color = '#2196F3';
+                    setTimeout(() => {
+                        status.textContent = 'اضغط على "ابدأ التسجيل" للبدء';
+                        status.style.color = '#666';
+                    }, 2000);
+                });
+            } else {
+                alert('لا يوجد نص لنسخه');
+            }
+        });
+        
+        // معالجة نتائج التعرف
+        recognition.onresult = (event) => {
+            let interimTranscript = '';
+            
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript + ' ';
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+            
+            textDisplay.textContent = finalTranscript + interimTranscript;
+        };
+        
+        // عند انتهاء التعرف
+        recognition.onend = () => {
+            status.textContent = '⏹️ انتهى التسجيل';
+            status.style.color = '#666';
+        };
+        
+        // عند حدوث خطأ
+        recognition.onerror = (event) => {
+            status.textContent = '❌ خطأ: ' + event.error;
+            status.style.color = '#f44336';
+            console.error('خطأ في التعرف على الكلام:', event.error);
+        };
+        
+        // دعم اللغة العربية بشكل أفضل
+        recognition.onstart = () => {
+            console.log('بدأ التعرف على الكلام باللغة: ' + languageSelect.value);
+        };
+    </script>
+</body>
+</html>
