@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ناطق - تواصل فوري للصم والبكم</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.4);
+            width: 100%;
+            max-width: 1200px;
+        }
+        
+        h1 {
+            color: #1e3c72;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 4em; /* خط كبير جداً */
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #2a5298;
+            margin-bottom: 30px;
+            font-size: 2em; /* خط كبير */
+            font-weight: bold;
+        }
+        
+        /* شاشة عرض النص - خط كبير جداً */
+        .text-display {
+            background: #f0f4f8;
+            border-radius: 25px;
+            padding: 50px;
+            min-height: 400px;
+            margin-bottom: 30px;
+            font-size: 3.5em; /* خط كبير جداً للوضوح */
+            line-height: 1.6;
+            border: 4px solid #2a5298;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+            font-weight: bold;
+            color: #1e3c72;
+            direction: rtl;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+        
+        /* منطقة التحكم */
+        .controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            padding: 25px 50px; /* أزرار أكبر */
+            font-size: 2em; /* خط كبير للأزرار */
+            border: none;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            min-width: 250px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .clear-btn {
+            background: #ff9800;
+            color: white;
+        }
+        
+        .clear-btn:hover {
+            background: #f57c00;
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255,152,0,0.4);
+        }
+        
+        .copy-btn {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .copy-btn:hover {
+            background: #1976D2;
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(33,150,243,0.4);
+        }
+        
+        .language-select {
+            padding: 25px;
+            font-size: 2em; /* خط كبير */
+            border-radius: 60px;
+            border: 3px solid #2a5298;
+            width: 300px;
+            text-align: center;
+            font-weight: bold;
+            color: #1e3c72;
+            background: white;
+            cursor: pointer;
+        }
+        
+        /* مؤشر الحالة */
+        .status-container {
+            background: #e3f2fd;
+            border-radius: 60px;
+            padding: 20px 30px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .status-led {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #4CAF50;
+            box-shadow: 0 0 20px #4CAF50;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        .status-text {
+            font-size: 2em; /* خط كبير */
+            color: #1e3c72;
+            font-weight: bold;
+        }
+        
+        /* صندوق النصائح */
+        .suggestion-box {
+            background: #e8f4fd;
+            border-radius: 25px;
+            padding: 30px;
+            margin-top: 30px;
+            border: 3px solid #2196F3;
+        }
+        
+        .suggestion-box h3 {
+            color: #1976D2;
+            margin-bottom: 20px;
+            font-size: 2.5em; /* خط كبير */
+            font-weight: bold;
+        }
+        
+        .suggestion-box ul {
+            padding-right: 40px;
+        }
+        
+        .suggestion-box li {
+            font-size: 2em; /* خط كبير */
+            line-height: 2;
+            color: #0d47a1;
+            margin-bottom: 10px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 1.8em; /* خط كبير */
+            font-weight: bold;
+        }
+        
+        /* رسالة المسح */
+        .clear-message {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 20px 40px;
+            border-radius: 60px;
+            font-size: 2em;
+            display: none;
+            animation: slideUp 0.5s;
+            z-index: 1000;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+        }
+        
+        @keyframes slideUp {
+            from { bottom: -100px; opacity: 0; }
+            to { bottom: 30px; opacity: 1; }
+        }
+        
+        /* تحسين للشاشات الصغيرة */
+        @media (max-width: 768px) {
+            h1 { font-size: 3em; }
+            .subtitle { font-size: 1.5em; }
+            .text-display { 
+                font-size: 2.5em; 
+                padding: 30px;
+                min-height: 300px;
+            }
+            button { 
+                font-size: 1.5em; 
+                padding: 20px 30px;
+                min-width: 200px;
+            }
+            .language-select { 
+                font-size: 1.5em; 
+                padding: 20px;
+                width: 250px;
+            }
+            .status-text { font-size: 1.5em; }
+            .suggestion-box h3 { font-size: 2em; }
+            .suggestion-box li { font-size: 1.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗣️ نَاطِق</h1>
+        <div class="subtitle">تواصل فوري - الميكروفون مفتوح دائماً</div>
+        
+        <!-- شاشة عرض النص بخط كبير -->
+        <div class="text-display" id="textDisplay">
+            <span id="welcomeMessage">🔊 أنا أستمع... تحدث وسأكتب لك</span>
+        </div>
+        
+        <!-- منطقة التحكم -->
+        <div class="controls">
+            <select class="language-select" id="languageSelect">
+                <option value="ar-SA">🇸🇦 العربية</option>
+                <option value="en-US">🇺🇸 English</option>
+                <option value="fr-FR">🇫🇷 Français</option>
+                <option value="es-ES">🇪🇸 Español</option>
+            </select>
+            
+            <button class="clear-btn" id="clearBtn">🧹 مسح النص</button>
+            <button class="copy-btn" id="copyBtn">📋 نسخ النص</button>
+        </div>
+        
+        <!-- مؤشر الحالة مع لمبة -->
+        <div class="status-container">
+            <div class="status-led" id="statusLed"></div>
+            <div class="status-text" id="status">🟢 الميكروفون مفتوح - أنا أستمع...</div>
+        </div>
+        
+        <!-- صندوق النصائح -->
+        <div class="suggestion-box">
+            <h3>💡 نصائح مهمة:</h3>
+            <ul>
+                <li>🎤 الميكروفون يعمل تلقائياً - لا تحتاج للضغط على أي زر</li>
+                <li>🗣️ تحدث بوضوح وبسرعة طبيعية</li>
+                <li>📝 الخط كبير لسهولة القراءة</li>
+                <li>🌐 اختر اللغة التي تريد التحدث بها</li>
+                <li>📋 استخدم زر النسخ لمشاركة النص</li>
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <p>🌟 موقع مجاني لمساعدة الصم والبكم على التواصل بسهولة</p>
+        </div>
+    </div>
+
+    <!-- رسالة عند المسح -->
+    <div class="clear-message" id="clearMessage">✅ تم مسح النص</div>
+
+    <script>
+        // التحقق من دعم المتصفح
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            alert('عذراً، متصفحك لا يدعم خاصية التعرف على الكلام. الرجاء استخدام متصفح حديث مثل Chrome أو Edge.');
+        }
+
+        // إعداد التعرف على الكلام
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        // عناصر الصفحة
+        const textDisplay = document.getElementById('textDisplay');
+        const clearBtn = document.getElementById('clearBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const languageSelect = document.getElementById('languageSelect');
+        const status = document.getElementById('status');
+        const statusLed = document.getElementById('statusLed');
+        const clearMessage = document.getElementById('clearMessage');
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        
+        // إعدادات التعرف
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'ar-SA';
+        recognition.maxAlternatives = 1;
+        
+        // متغير لتخزين النص الكامل
+        let finalTranscript = '';
+        let restartTimeout = null;
+        let isListening = false;
+        
+        // دالة بدء الاستماع
+        function startListening() {
+            if (isListening) return;
+            
+            try {
+                recognition.lang = languageSelect.value;
+                recognition.start();
+                isListening = true;
+                status.textContent = '🟢 الميكروفون مفتوح - أنا أستمع...';
+                statusLed.style.background = '#4CAF50';
+                statusLed.style.boxShadow = '0 0 20px #4CAF50';
+                welcomeMessage.style.display = 'none';
+            } catch (error) {
+                console.log('محاولة بدء الاستماع...');
+                setTimeout(startListening, 1000);
+            }
+        }
+        
+        // دالة إعادة تشغيل الاستماع
+        function restartListening() {
+            if (restartTimeout) {
+                clearTimeout(restartTimeout);
+            }
+            
+            isListening = false;
+            restartTimeout = setTimeout(() => {
+                startListening();
+            }, 100);
+        }
+        
+        // معالجة نتائج التعرف
+        recognition.onresult = (event) => {
+            let interimTranscript = '';
+            
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript + ' ';
+                    // تحديث العرض مع النص النهائي
+                    if (finalTranscript.trim()) {
+                        textDisplay.textContent = finalTranscript;
+                    }
+                } else {
+                    interimTranscript += transcript;
+                    // عرض النص المؤقت مع النص النهائي
+                    if (finalTranscript.trim() || interimTranscript.trim()) {
+                        textDisplay.textContent = finalTranscript + interimTranscript;
+                    }
+                }
+            }
+        };
+        
+        // عند انتهاء التعرف
+        recognition.onend = () => {
+            console.log('انتهى التعرف - إعادة التشغيل');
+            isListening = false;
+            restartListening();
+        };
+        
+        // عند حدوث خطأ
+        recognition.onerror = (event) => {
+            console.log('خطأ في التعرف:', event.error);
+            
+            if (event.error === 'no-speech') {
+                // لا مشكلة - فقط انتظر الكلام
+                restartListening();
+            } else if (event.error === 'aborted') {
+                restartListening();
+            } else if (event.error === 'audio-capture') {
+                status.textContent = '❌ مشكلة في الميكروفون - تحقق من التوصيل';
+                statusLed.style.background = '#f44336';
+                statusLed.style.boxShadow = '0 0 20px #f44336';
+                
+                // محاولة إعادة التشغيل بعد 3 ثواني
+                setTimeout(() => {
+                    restartListening();
+                }, 3000);
+            } else {
+                // محاولة إعادة التشغيل لأي خطأ آخر
+                restartListening();
+            }
+        };
+        
+        // بدء الاستماع عند تحميل الصفحة
+        window.addEventListener('load', () => {
+            startListening();
+        });
+        
+        // عند تغيير اللغة
+        languageSelect.addEventListener('change', () => {
+            // إعادة تشغيل الاستماع باللغة الجديدة
+            isListening = false;
+            recognition.stop(); // إيقاف الاستماع الحالي
+            setTimeout(() => {
+                startListening();
+            }, 500);
+        });
+        
+        // مسح النص
+        clearBtn.addEventListener('click', () => {
+            textDisplay.textContent = '';
+            finalTranscript = '';
+            welcomeMessage.style.display = 'inline';
+            welcomeMessage.textContent = '🔊 أنا أستمع... تحدث وسأكتب لك';
+            
+            // إظهار رسالة المسح
+            clearMessage.style.display = 'block';
+            setTimeout(() => {
+                clearMessage.style.display = 'none';
+            }, 2000);
+        });
+        
+        // نسخ النص
+        copyBtn.addEventListener('click', () => {
+            const text = textDisplay.textContent;
+            // تجاهل رسالة الترحيب إذا كانت موجودة
+            const textToCopy = text === '🔊 أنا أستمع... تحدث وسأكتب لك' ? '' : text;
+            
+            if (textToCopy && textToCopy.trim()) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    status.textContent = '📋 تم نسخ النص!';
+                    statusLed.style.background = '#2196F3';
+                    statusLed.style.boxShadow = '0 0 20px #2196F3';
+                    
+                    // العودة للحالة الطبيعية بعد ثانيتين
+                    setTimeout(() => {
+                        status.textContent = '🟢 الميكروفون مفتوح - أنا أستمع...';
+                        statusLed.style.background = '#4CAF50';
+                        statusLed.style.boxShadow = '0 0 20px #4CAF50';
+                    }, 2000);
+                });
+            } else {
+                alert('لا يوجد نص لنسخه');
+            }
+        });
+        
+        // التأكد من استمرار الاستماع عند النقر على أي مكان في الصفحة
+        document.addEventListener('click', () => {
+            if (!isListening) {
+                restartListening();
+            }
+        });
+        
+        // تنظيف عند إغلاق الصفحة
+        window.addEventListener('beforeunload', () => {
+            if (isListening) {
+                recognition.stop();
+            }
+            if (restartTimeout) {
+                clearTimeout(restartTimeout);
+            }
+        });
+    </script>
+</body>
+</html>
